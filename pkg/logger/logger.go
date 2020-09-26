@@ -13,6 +13,8 @@ var logger *zap.Logger
 
 func Setup() (func(), error) {
 	cfg := zap.NewProductionConfig()
+	cfg.DisableStacktrace = true
+	cfg.DisableCaller = true
 	cfg.EncoderConfig.TimeKey = "time"
 	cfg.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
 	l, err := cfg.Build()
@@ -26,11 +28,24 @@ func Setup() (func(), error) {
 }
 
 func Info(message string) {
-	logger.Info(message, zap.String("log_id", uuid.New().String()))
+	pc, file, line, _ := runtime.Caller(1)
+	logger.Info(message,
+		zap.String("log_id", uuid.New().String()),
+		zap.String("call", runtime.FuncForPC(pc).Name()),
+		zap.String("file", file),
+		zap.Int("line", line),
+	)
 }
 
 func Infof(format string, params ...interface{}) {
-	Info(fmt.Sprintf(format, params...))
+	message := fmt.Sprintf(format, params...)
+	pc, file, line, _ := runtime.Caller(1)
+	logger.Info(message,
+		zap.String("log_id", uuid.New().String()),
+		zap.String("call", runtime.FuncForPC(pc).Name()),
+		zap.String("file", file),
+		zap.Int("line", line),
+	)
 }
 
 func Fatal(message string) {
@@ -44,5 +59,12 @@ func Fatal(message string) {
 }
 
 func Fatalf(format string, params ...interface{}) {
-	Fatal(fmt.Sprintf(format, params...))
+	message := fmt.Sprintf(format, params...)
+	pc, file, line, _ := runtime.Caller(1)
+	logger.Fatal(message,
+		zap.String("log_id", uuid.New().String()),
+		zap.String("call", runtime.FuncForPC(pc).Name()),
+		zap.String("file", file),
+		zap.Int("line", line),
+	)
 }

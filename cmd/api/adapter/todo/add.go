@@ -3,7 +3,6 @@ package todo
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -44,14 +43,10 @@ func (h handler) Add(w http.ResponseWriter, r *http.Request) {
 		if err := todo.Insert(ctx, tx, boil.Infer()); err != nil {
 			return err
 		}
-		fmt.Printf("todo: %+v\n", todo)
 
 		users, err := entity.Users(entity.UserWhere.ID.IN(in.AssigneeUserIDs)).All(ctx, tx)
 		if err != nil {
 			return err
-		}
-		for _, user := range users {
-			fmt.Printf("user: %+v\n", user)
 		}
 
 		if err := todo.AddUsers(ctx, tx, false, users...); err != nil {
